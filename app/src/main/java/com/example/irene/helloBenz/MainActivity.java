@@ -1,3 +1,9 @@
+/**
+ * This is a small wear app which can unlock the doors of Mercedes-Benz Car
+ * by using Mercedes-Benz's experimenting Car API.
+ *
+ * @author Irene Chung
+ */
 package com.example.irene.helloBenz;
 
 import android.os.Bundle;
@@ -10,6 +16,7 @@ import android.widget.Toast;
 import com.android.volley.AuthFailureError;
 import com.android.volley.ServerError;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
@@ -18,12 +25,14 @@ import android.view.View.OnClickListener;
 import com.android.volley.Request;
 import com.android.volley.Response;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class MainActivity extends WearableActivity {
-    //public static final int LEFT_FRONT_DOOR = 1;
     private TextView mTextView;
     private ImageButton unlockBtn;
-    private String accessToken =  "4b30859a-5e31-4dd4-9b5c-db4bf35b6169";
-    private String refreshToken = "64c692c4-865f-4e1b-b764-0d92e9ed7506";
+    private String accessToken =  "ca0f9669-296a-42ae-b6af-1a8be9a49184";
+    private String refreshToken = "aa0ae3bc-481c-4c08-86ee-268535440f74";
     private static final String VID = "A882F4C07FAF66C650";
     private static final String BASE64_ID = "MGYwYTlhMzctZmYyZS00Zjg0LTkwNjctNzIwMjgzMTJmNjk3OjkzNDE5YzBiLTQ5NmEtNGNkYi1hNDRkLTU2ZGE5NGIzOWEyMg==";
 
@@ -44,16 +53,28 @@ public class MainActivity extends WearableActivity {
         setAmbientEnabled();
     }
 
+    /**
+     * Send a post request to API to unlock the doors.
+     */
     private void unlockDoor() {
         String urlDoor = "https://api.mercedes-benz.com/experimental/connectedvehicle/v1/vehicles/" +
                           VID + "/doors";
-        sendPostRequest(urlDoor);
+        sendUnlockPostRequest(urlDoor);
     }
-
+    /**
+     * Parse the refresh token returned from OAuth server.
+     * And modify the access token by the returned token.
+     * @param response a http response returned from server
+     */
     private void parseNewToken(String response) {
+
         Log.d("Test", response);
     }
 
+    /**
+     * Refresh the access token by sending a post request to the auth server
+     * with current token.
+     */
     private void refreshToken() {
         // todo
         String url = "https://api.secure.mercedes-benz.com/oidc10/auth/oauth/v2/token";
@@ -90,39 +111,52 @@ public class MainActivity extends WearableActivity {
                 }
             }
         };
+        /* add to request queue. */
         HttpHandle.getInstance(this).getRequestQueue().add(strReq);
     }
+    /**
+     * Send an post http request to server according to the url.
+     * @param url the url for the http request
+     */
+    private void sendUnlockPostRequest(String url){
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("command", "UNLOCK");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
-    private void sendPostRequest(String url) {
-        // create string request
-        StringRequest strReq = new StringRequest(Request.Method.POST,
-                url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                Log.d("Test", response.toString());
-                Toast.makeText(MainActivity.this, "Door unlocked!", Toast.LENGTH_SHORT).show();
-            }
-        }, new Response.ErrorListener() {
+        final String requestBody = jsonBody.toString();
+
+        JsonObjectRequest request_json = new JsonObjectRequest(Request.Method.POST, url, null,
+            new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    Toast.makeText(MainActivity.this, "unlocked!", Toast.LENGTH_SHORT).show();
+                }
+            }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.d("Test", error.toString());
-                if (error instanceof ServerError) {
-                    Toast.makeText(MainActivity.this, "Server Error!", Toast.LENGTH_SHORT).show();
-                } else if (error instanceof AuthFailureError) {
-                    refreshToken();
-                }
-
+                
+                Toast.makeText(MainActivity.this, "unlock error!", Toast.LENGTH_SHORT).show();
             }
         }) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 HashMap<String, String> headers = new HashMap<String, String>();
                 headers.put("Authorization", "Bearer " + accessToken);
-                headers.put("Content-Type", "application/json");
                 return headers;
             }
+            @Override
+            public byte[] getBody() {
+                return requestBody.getBytes();
+
+            }
+            @Override
+            public String getBodyContentType() {
+                return "application/json";
+            }
         };
-        // add to request queue
-        HttpHandle.getInstance(this).getRequestQueue().add(strReq);
+        HttpHandle.getInstance(this).getRequestQueue().add(request_json);
     }
 }

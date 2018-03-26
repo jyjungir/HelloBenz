@@ -31,18 +31,18 @@ import org.json.JSONObject;
 public class MainActivity extends WearableActivity {
     private TextView mTextView;
     private ImageButton unlockBtn;
-    private String accessToken =  "ca0f9669-296a-42ae-b6af-1a8be9a49184";
-    private String refreshToken = "aa0ae3bc-481c-4c08-86ee-268535440f74";
+    private static String accessToken =  "21bb325c-6b86-4a17-9f8e-6fafa83a4f5e";
+    private static String refreshToken = "906c0c4c-30dd-4942-9626-053da6dddcc7";
     private static final String VID = "A882F4C07FAF66C650";
     private static final String BASE64_ID = "MGYwYTlhMzctZmYyZS00Zjg0LTkwNjctNzIwMjgzMTJmNjk3OjkzNDE5YzBiLTQ5NmEtNGNkYi1hNDRkLTU2ZGE5NGIzOWEyMg==";
-
+    private static final String DEBUGTAG = "DEBUG";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         mTextView = (TextView) findViewById(R.id.text);
-        unlockBtn = (ImageButton) findViewById(R.id.imageButton2);
+        unlockBtn = (ImageButton) findViewById(R.id.imageButtonUnlock);
         unlockBtn.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this, "Unlocking car doors", Toast.LENGTH_SHORT).show();
@@ -64,11 +64,17 @@ public class MainActivity extends WearableActivity {
     /**
      * Parse the refresh token returned from OAuth server.
      * And modify the access token by the returned token.
-     * @param response a http response returned from server
+     * @param response a json format response returned from server
      */
-    private void parseNewToken(String response) {
-
-        Log.d("Test", response);
+    private void parseNewToken(JSONObject response) {
+        try {
+            String newAccess = response.getString("access_token");
+            String newRefresh = response.getString("refresh_token");
+            this.accessToken = newAccess;
+            this.refreshToken = newRefresh;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -76,20 +82,23 @@ public class MainActivity extends WearableActivity {
      * with current token.
      */
     private void refreshToken() {
-        // todo
         String url = "https://api.secure.mercedes-benz.com/oidc10/auth/oauth/v2/token";
         StringRequest strReq = new StringRequest(Request.Method.POST,
                 url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                Log.d("Test", response.toString());
-                Toast.makeText(MainActivity.this, "Token refreshed!", Toast.LENGTH_SHORT).show();
-                parseNewToken(response);
+                try {
+                    JSONObject jsonObject = new JSONObject(response);
+                    parseNewToken(jsonObject);
+                    Toast.makeText(MainActivity.this, "Token refreshed!", Toast.LENGTH_SHORT).show();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.d("Test", error.toString());
+                Log.d(DEBUGTAG, error.toString());
                 Toast.makeText(MainActivity.this, "token Error!", Toast.LENGTH_SHORT).show();
             }
         }) {
@@ -128,7 +137,7 @@ public class MainActivity extends WearableActivity {
 
         final String requestBody = jsonBody.toString();
 
-        JsonObjectRequest request_json = new JsonObjectRequest(Request.Method.POST, url, null,
+        JsonObjectRequest requestJson = new JsonObjectRequest(Request.Method.POST, url, null,
             new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
@@ -137,8 +146,11 @@ public class MainActivity extends WearableActivity {
             }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                
-                Toast.makeText(MainActivity.this, "unlock error!", Toast.LENGTH_SHORT).show();
+                if (error instanceof AuthFailureError) {
+                    refreshToken();
+                } else if (error instanceof ServerError) {
+                    Toast.makeText(MainActivity.this, "Server error!", Toast.LENGTH_SHORT).show();
+                }
             }
         }) {
             @Override
@@ -157,6 +169,6 @@ public class MainActivity extends WearableActivity {
                 return "application/json";
             }
         };
-        HttpHandle.getInstance(this).getRequestQueue().add(request_json);
+        HttpHandle.getInstance(this).getRequestQueue().add(requestJson);
     }
 }

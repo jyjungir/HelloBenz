@@ -20,17 +20,26 @@
             android:id="@+id/text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignEnd="@+id/imageButtonLock"
             android:layout_alignParentTop="true"
-            android:layout_alignStart="@+id/imageButton2"
-            android:text="My Car" />
+            android:layout_alignStart="@+id/imageButtonUnlock"
+            android:text="My Mercedes-Benz" />
 
         <ImageButton
-            android:id="@+id/imageButton2"
+            android:id="@+id/imageButtonUnlock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
+            android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:src="@android:drawable/ic_lock_lock" />
+
+        <ImageButton
+            android:id="@+id/imageButtonLock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/imageButtonUnlock"
+            android:layout_alignParentEnd="true"
+            android:src="@android:drawable/ic_lock_idle_lock" />
     </RelativeLayout>
 </android.support.wear.widget.BoxInsetLayout>
 

@@ -33,8 +33,9 @@ import org.json.JSONObject;
 public class MainActivity extends WearableActivity {
     private TextView mTextView;
     private ImageButton unlockBtn;
-    private static String accessToken =  "21bb325c-6b86-4a17-9f8e-6fafa83a4f5e";
-    private static String refreshToken = "906c0c4c-30dd-4942-9626-053da6dddcc7";
+    private ImageButton lockBtn;
+    private static String accessToken =  "c0e03842-197d-4e78-a622-844bd153b144";
+    private static String refreshToken = "e0341116-2c2b-46f6-8139-257cd951112d";
     private static final String VID = "A882F4C07FAF66C650";
     private static final String BASE64_ID = "MGYwYTlhMzctZmYyZS00Zjg0LTkwNjctNzIwMjgzMTJmNjk3OjkzNDE5YzBiLTQ5NmEtNGNkYi1hNDRkLTU2ZGE5NGIzOWEyMg==";
     private static final String DEBUGTAG = "DEBUG";
@@ -46,23 +47,40 @@ public class MainActivity extends WearableActivity {
 
         mTextView = (TextView) findViewById(R.id.text);
         unlockBtn = (ImageButton) findViewById(R.id.imageButtonUnlock);
+        lockBtn = (ImageButton) findViewById(R.id.imageButtonLock);
         unlockBtn.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this, "Unlocking car doors", Toast.LENGTH_SHORT).show();
                 unlockDoor();
             }
         });
+        lockBtn.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "Locking car doors", Toast.LENGTH_SHORT).show();
+                lockDoor();
+            }
+        });
+
         // Enables Always-on
         setAmbientEnabled();
     }
 
+    /**
+     * Send a post request to API to lock the doors.
+     */
+    private void lockDoor() {
+        String urlDoor = "https://api.mercedes-benz.com/experimental/connectedvehicle/v1/vehicles/" +
+                         VID + "/doors";
+        sendDoorRequest(urlDoor, "LOCK");
+    }
     /**
      * Send a post request to API to unlock the doors.
      */
     private void unlockDoor() {
         String urlDoor = "https://api.mercedes-benz.com/experimental/connectedvehicle/v1/vehicles/" +
                           VID + "/doors";
-        sendUnlockPostRequest(urlDoor);
+        sendDoorRequest(urlDoor, "UNLOCK");
     }
     /**
      * Parse the refresh token returned from OAuth server.
@@ -126,14 +144,16 @@ public class MainActivity extends WearableActivity {
         /* add to request queue. */
         HttpHandle.getInstance(this).getRequestQueue().add(strReq);
     }
+
     /**
-     * Send an post http request to server according to the url.
-     * @param url the url for the http request
+     * Send an post http request to server according to the url and command.
+     * @param url url for door API
+     * @param command lock or unlock
      */
-    private void sendUnlockPostRequest(String url){
+    private void sendDoorRequest(String url, String command) {
         JSONObject jsonBody = new JSONObject();
         try {
-            jsonBody.put("command", "UNLOCK");
+            jsonBody.put("command", command);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -144,7 +164,7 @@ public class MainActivity extends WearableActivity {
             new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
-                    Toast.makeText(MainActivity.this, "unlocked!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Success!", Toast.LENGTH_SHORT).show();
                 }
             }, new Response.ErrorListener() {
             @Override
@@ -165,7 +185,6 @@ public class MainActivity extends WearableActivity {
             @Override
             public byte[] getBody() {
                 return requestBody.getBytes();
-
             }
             @Override
             public String getBodyContentType() {

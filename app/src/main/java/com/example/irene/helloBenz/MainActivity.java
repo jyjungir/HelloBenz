@@ -1,9 +1,3 @@
-/**
- * This is a small wear app which can unlock the doors of Mercedes-Benz Car
- * by using Mercedes-Benz's experimenting Car API.
- *
- * @author Irene Chung
- */
 package com.example.irene.helloBenz;
 
 import android.os.Bundle;
@@ -27,7 +21,15 @@ import com.android.volley.Response;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
+/**
+ * This is a small wear app which can unlock the doors of Mercedes-Benz Car
+ * by using Mercedes-Benz's experimenting Car API.
+ *
+ * We skip the initial authenntication steps here, so there are some hard code of tokens
+ * which are used to communicate with Mercedes-Benz API.
+ *
+ * @author Irene Chung
+ */
 public class MainActivity extends WearableActivity {
     private TextView mTextView;
     private ImageButton unlockBtn;
@@ -36,6 +38,7 @@ public class MainActivity extends WearableActivity {
     private static final String VID = "A882F4C07FAF66C650";
     private static final String BASE64_ID = "MGYwYTlhMzctZmYyZS00Zjg0LTkwNjctNzIwMjgzMTJmNjk3OjkzNDE5YzBiLTQ5NmEtNGNkYi1hNDRkLTU2ZGE5NGIzOWEyMg==";
     private static final String DEBUGTAG = "DEBUG";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
